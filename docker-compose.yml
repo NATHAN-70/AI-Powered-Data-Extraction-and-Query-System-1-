@@ -1,0 +1,50 @@
+services:
+  milvus:
+    image: milvusdb/milvus:latest
+    container_name: milvus-standalone
+    restart: unless-stopped
+    ports:
+      - "19530:19530" # gRPC port (pymilvus)
+      - "19121:19121" # HTTP/REST monitoring
+    environment:
+      - "TZ=UTC"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "curl -fs http://127.0.0.1:19121/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: .
+    container_name: rag-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app/src
+      - TESSDATA_PREFIX=/app/tessdata
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+    depends_on:
+      milvus:
+        condition: service_healthy
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./uploads:/app/uploads
+      - ./tessdata:/app/tessdata
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: rag-frontend
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://backend:8000
+    depends_on:
+      - backend
+    command: streamlit run src/streamlit_app.py

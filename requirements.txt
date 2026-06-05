@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+streamlit
+requests
+beautifulsoup4
+pdfplumber
+pytesseract
+pillow
+sentence-transformers
+pymilvus
+python-dotenv
+python-multipart
+numpy

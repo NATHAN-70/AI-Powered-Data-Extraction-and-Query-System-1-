@@ -1,0 +1,13 @@
+.git
+.gitignore
+*.pyc
+__pycache__
+.pytest_cache
+.venv
+venv
+.env
+*.log
+.DS_Store
+uploads/
+local_vectors.npz
+LOCK
